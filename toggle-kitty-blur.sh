@@ -12,14 +12,14 @@ class=$(jq -r '.class' <<<"$win")
 pid=$(jq -r '.pid' <<<"$win")
 
 if [[ "$class" != kitty* ]]; then
-    notify-send -t 1500 -u low -h string:x-canonical-private-synchronous:kittyblur "Kitty blur" "Active window is not kitty"
+    notify-send -t 1500 -u low -h string:x-canonical-private-synchronous:kittyblur -h int:SWAYNC_BYPASS_DND:1 "Kitty blur" "Active window is not kitty"
     exit 0
 fi
 
 socket="unix:/tmp/kitty-$pid"
 
 if ! info=$(kitten @ --to "$socket" ls 2>/dev/null); then
-    notify-send -t 1500 -u low -h string:x-canonical-private-synchronous:kittyblur "Kitty blur" "No remote control socket, restart kitty"
+    notify-send -t 1500 -u low -h string:x-canonical-private-synchronous:kittyblur -h int:SWAYNC_BYPASS_DND:1 "Kitty blur" "No remote control socket, restart kitty"
     exit 1
 fi
 
@@ -27,8 +27,8 @@ current=$(jq -r '.[0].background_opacity' <<<"$info")
 
 if awk "BEGIN{exit !($current < 0.95)}"; then
     kitten @ --to "$socket" set-background-opacity --all 1.0
-    notify-send -t 1500 -u low -h string:x-canonical-private-synchronous:kittyblur "Kitty blur" "Off"
+    notify-send -t 1500 -u low -h string:x-canonical-private-synchronous:kittyblur -h int:SWAYNC_BYPASS_DND:1 "Kitty blur" "Off"
 else
     kitten @ --to "$socket" set-background-opacity --all "$blurred"
-    notify-send -t 1500 -u low -h string:x-canonical-private-synchronous:kittyblur "Kitty blur" "On"
+    notify-send -t 1500 -u low -h string:x-canonical-private-synchronous:kittyblur -h int:SWAYNC_BYPASS_DND:1 "Kitty blur" "On"
 fi
