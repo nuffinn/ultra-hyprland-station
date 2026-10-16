@@ -2,22 +2,30 @@
 # Drop the altwin:swap_lalt_lwin xkb option while a Dota 2 window is focused,
 # so the physical Alt key is a real Alt in-game (ping wheel, alt-click pings).
 # Restores the normal layout as soon as focus leaves Dota.
-# Started from hyprland.conf via exec-once.
+# Started from hyprland.lua via the hyprland.start event.
 
-NORMAL="ctrl:swapcaps,altwin:swap_lalt_lwin"   # must match input:kb_options in hyprland.conf
+NORMAL="ctrl:swapcaps,altwin:swap_lalt_lwin"   # must match input.kb_options in hyprland.lua
 GAMING="ctrl:swapcaps"
 MATCH='^dota2$'                                 # window class, case-insensitive
 
 sock="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
 state=normal
 
+# Lua config manager (hyprland.lua): change options with `hyprctl eval`.
+# Legacy hyprlang manager (hyprland.conf): fall back to `hyprctl keyword`.
+if hyprctl eval 'return true' 2>&1 | grep -q 'only supported with the lua'; then
+    set_kb_options() { hyprctl keyword input:kb_options "$1" >/dev/null; }
+else
+    set_kb_options() { hyprctl eval "hl.config({ [\"input.kb_options\"] = \"$1\" })" >/dev/null; }
+fi
+
 set_opts() {
     [[ "$state" == "$1" ]] && return
     state=$1
     if [[ "$state" == gaming ]]; then
-        hyprctl keyword input:kb_options "$GAMING" >/dev/null
+        set_kb_options "$GAMING"
     else
-        hyprctl keyword input:kb_options "$NORMAL" >/dev/null
+        set_kb_options "$NORMAL"
     fi
 }
 
